@@ -38,13 +38,14 @@ steps:
     command: |
       echo "Current directory:"
       pwd
-      echo "Directory contents before download:"
+      echo "Contents:"
       ls -la
       echo "Downloading artifact:"
       buildkite-agent artifact download 'artifact/*' .
-      echo "Directory contents after download:"
+      echo "Contents:"
       ls -la artifact/
       echo "Making executable:"
       chmod +x artifact/hello
       echo "Running program:"
       ./artifact/hello "$(buildkite-agent meta-data get users-name)"
+      ./artifact/hello "$(buildkite-agent meta-data get users-name)" > outputfile.txt
