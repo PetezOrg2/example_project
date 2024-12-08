@@ -1,11 +1,34 @@
 steps:
-  - label: ":docker: Build and Upload Artifact"
-    plugins:
-      docker-compose#v3.7.0:
-        run: web
-    artifact_paths:
-      - hello
+  - label: ":mag: List directory contents"
+    command: |
+      echo "Current directory:"
+      pwd
+      echo "Directory contents:"
+      ls -la
+      echo "Contents of hello directory:"
+      ls -la hello/
 
+  - label: ":docker: Build and Upload"
+    plugins:
+      - docker#v3.7.0:
+          image: "golang:1.21.0"
+          workdir: /go/src/app
+          volumes:
+            - .:/go/src/app
+          environment:
+            - BUILDKITE_AGENT_ACCESS_TOKEN
+          command: [
+              "/bin/sh",
+              "-c",
+              "
+              cd hello &&
+              go build -v -o hello &&
+              mkdir -p artifact &&
+              mv hello artifact/ &&
+              buildkite-agent artifact upload 'artifact/**/*'
+              ",
+            ]
+            
   - block: "Enter your name"
     key: "name-input"
 
