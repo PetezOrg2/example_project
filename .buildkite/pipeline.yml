@@ -49,3 +49,5 @@ steps:
       echo "Running program:"
       ./artifact/hello "$(buildkite-agent meta-data get users-name)"
       ./artifact/hello "$(buildkite-agent meta-data get users-name)" > outputfile.txt
+      ls -al
+      ls -al artifact/*
