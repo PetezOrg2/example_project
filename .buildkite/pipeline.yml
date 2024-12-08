@@ -1,14 +1,21 @@
 steps:
-  - label: ":hammer: Build"
-    command: "scripts/build.sh"
-    key: build
+  - label: ":docker: Build and Upload Artifact"
+    plugins:
+      docker-compose#v3.7.0:
+        run: web
+    artifact_paths:
+      - hello
 
-  - label: ":test_tube: Test"
-    command: "scripts/test.sh"
-    key: test
-    depends_on: build
+  - block: "Enter your name"
+    key: "name-input"
 
-  - label: ":rocket: Deploy"
-    command: "scripts/deploy.sh"
-    key: deploy
-    depends_on: test
+  - label: ":bash: Run Compiled Program"
+    command: "./hello $(buildkite-agent meta-data get user-name)"
+    depends_on: "name-input"
+    artifact_paths:
+      - hello
+
+  - wait
+
+  - label: ":package: Save Metadata"
+    command: buildkite-agent meta-data set user-name "{your name}"
