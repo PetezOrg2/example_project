@@ -1,5 +1,5 @@
 steps:
-  - label: ":mag: List directory contents"
+  - label: ":key: List directory contents"
     command: |
       echo "Current directory:"
       pwd
@@ -8,15 +8,13 @@ steps:
       echo "Contents of hello directory:"
       ls -la hello/
 
-  - label: ":docker: Build and Upload"
+  - label: ":docker: Build Docker Image"
     plugins:
       - docker#v3.7.0:
           image: "golang:1.23.4-bookworm"
-          workdir: /go/src/app
-          volumes:
-            - .:/go/src/app
- #         environment:
- #           - BUILDKITE_AGENT_ACCESS_TOKEN
+          #workdir: /go/src/app
+          #volumes:
+          # - .:/go/src/app
           command: [
               "/bin/sh",
               "-c",
@@ -28,11 +26,6 @@ steps:
               buildkite-agent artifact upload 'artifact/**/*'
               ",
             ]
-
-  # wait
-
-  # block: ":raised_hand: Manual Approval"
-  # prompt: "Ready to proceed with input and execution?"
 
   - block: ":name_input: Enter your name"
     prompt: "Please enter your name"
