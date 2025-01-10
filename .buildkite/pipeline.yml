@@ -1,19 +1,22 @@
 steps:
-   - label: ":key: List directory contents"
+  - label: ":mag: List directory contents"
     command: |
       echo "Current directory:"
       pwd
       echo "Directory contents:"
       ls -la
       echo "Contents of hello directory:"
-      ls -la hello/  - label: ":docker: Build Docker Image"
-      
+      ls -la hello/
+
+  - label: ":docker: Build and Upload"
     plugins:
       - docker#v3.7.0:
           image: "golang:1.23.4-bookworm"
-          #workdir: /go/src/app
-          #volumes:
-          # - .:/go/src/app
+          workdir: /go/src/app
+          volumes:
+            - .:/go/src/app
+ #         environment:
+ #           - BUILDKITE_AGENT_ACCESS_TOKEN
           command: [
               "/bin/sh",
               "-c",
@@ -26,6 +29,11 @@ steps:
               ",
             ]
 
+  # wait
+
+  # block: ":raised_hand: Manual Approval"
+  # prompt: "Ready to proceed with input and execution?"
+
   - block: ":name_input: Enter your name"
     prompt: "Please enter your name"
     fields:
@@ -37,18 +45,96 @@ steps:
     command: |
       echo "Current directory:"
       pwd
-      echo "Contents:"
+      echo "Directory contents before download:"
       ls -la
       echo "Downloading artifact:"
       buildkite-agent artifact download 'artifact/*' .
-      echo "Contents:"
+      echo "Directory contents after download:"
       ls -la artifact/
       echo "Making executable:"
       chmod +x artifact/hello
       echo "Running program:"
       ./artifact/hello "$(buildkite-agent meta-data get users-name)"
-      ./artifact/hello "$(buildkite-agent meta-data get users-name)" > outputfile.txt
-      ls -al
-      ls -al artifact/*
-      buildkite-agent artifact upload outputfile.txt
+
+  - wait
+
+  - label: ":chart_with_upwards_trend: Generate report"
+    key: report
+    commands: |
+      cat << 'EOT' | bash
+        set -euo pipefail
+
+        echo "Generating report..."
+        export REPORT_NAME="report_$(date +%s).txt"
+        echo "Report name: $$REPORT_NAME"
+
+        echo "Retrieving user name from metadata..."
+        export USERS_NAME=$$(buildkite-agent meta-data get "users-name")
+        echo "User name retrieved: $$USERS_NAME"
+
+        echo "Creating report file..."
+        echo "Program executed successfully for user: $$USERS_NAME" > "$$REPORT_NAME"
+
+        echo "Checking if report file was created..."
+        if [ -f "$$REPORT_NAME" ]; then
+          echo "Report file created successfully"
+          echo "Report contents:"
+          cat "$$REPORT_NAME"
+        else
+          echo "Error: Failed to create report file"
+          echo "Current directory contents:"
+          ls -la
+          exit 1
+        fi
+
+        echo "Uploading report..."
+        buildkite-agent artifact upload "$$REPORT_NAME"
+
+        echo "Setting report name in metadata..."
+        buildkite-agent meta-data set "report-name" "$$REPORT_NAME"
+      EOT
+
+  - wait: ~
+    continue_on_failure: true
+
+  - label: ":memo: Display report"
+    key: display
+    command: |
+      echo "Buildkite agent version:"
+      buildkite-agent --version
+
+      echo "Waiting for artifact to become available..."
+      sleep 10
+
+      echo "Retrieving report name:"
+      export REPORT_NAME=$$(buildkite-agent meta-data get "report-name")
+      echo "Report name: $$REPORT_NAME"
+
+      echo "Listing all artifacts:"
+      buildkite-agent artifact search "*"
+
+      echo "Attempting to download report:"
+      for i in {1..5}; do
+        if buildkite-agent artifact download "$$REPORT_NAME" .; then
+          echo "Report downloaded successfully"
+          if [ -f "$$REPORT_NAME" ]; then
+            echo "Report contents:"
+            cat "$$REPORT_NAME"
+            exit 0
+          else
+            echo "Report file not found after download"
+          fi
+        else
+          echo "Attempt $i: Failed to download report"
+        fi
+        echo "Retrying in 5 seconds..."
+        sleep 5
+      done
+
+      echo "Failed to download report after 5 attempts"
+      echo "Current directory contents:"
+      ls -la
+      echo "Environment variables:"
+      env | sort
+      exit 1
 
