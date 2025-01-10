@@ -1,5 +1,13 @@
 steps:
-  - label: ":docker: Build Docker Image"
+   - label: ":key: List directory contents"
+    command: |
+      echo "Current directory:"
+      pwd
+      echo "Directory contents:"
+      ls -la
+      echo "Contents of hello directory:"
+      ls -la hello/  - label: ":docker: Build Docker Image"
+      
     plugins:
       - docker#v3.7.0:
           image: "golang:1.23.4-bookworm"
