@@ -58,5 +58,5 @@ steps:
       ./artifact/hello "$(buildkite-agent meta-data get users-name)" > outputfile.txt
       ls -al
       ls -al artifact/
-      buildkite-agent artifact upload outputfilr.txt
+      buildkite-agent artifact upload outputfile.txt
   
