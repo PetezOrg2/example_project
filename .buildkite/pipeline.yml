@@ -15,8 +15,6 @@ steps:
           #workdir: /go/src/app
           #volumes:
           # - .:/go/src/app
- #        # environment:
- #        #   - BUILDKITE_AGENT_ACCESS_TOKEN
           command: [
               "/bin/sh",
               "-c",
