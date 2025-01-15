@@ -29,8 +29,8 @@ steps:
 
   # wait
 
-  # block: ":raised_hand: Manual Approval"
-  # prompt: "Ready to proceed with input and execution?"
+  - block: ":raised_hand: Manual Approval"
+    prompt: "Ready to proceed with input and execution?"
 
   - block: ":name_input: Enter your name"
     prompt: "Please enter your name"
